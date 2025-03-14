@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating Images Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #0c1445;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Stars background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        /* Welcome screen styles */
+        .welcome-screen {
+            background-color: #ffcdb2;
+            width: 100%;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.8s ease-in-out;
+        }
+
+        .welcome-card {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-card h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #9932cc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+
+        .welcome-card p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-colors {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        }
+
+        .btn-enter {
+            background: linear-gradient(45deg, #db7093, #9932cc);
+        }
+
+        /* Gallery styles */
+        .gallery-container {
+            width: 100%;
+            max-width: 1200px;
+            min-height: 100vh;
+            padding: 50px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .gallery {
+            position: relative;
+            height: 600px;
+            width: 100%;
+        }
+
+        .photo-card {
+            position: absolute;
+            width: 300px;
+            height: 450px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.4s, box-shadow 0.4s;
+            cursor: pointer;
+            transform-origin: center;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .photo-card:hover {
+            transform: scale(1.05) translateZ(20px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-card:nth-child(1) {
+            top: 5%;
+            left: 5%;
+            transform: rotate(-5deg);
+            z-index: 5;
+        }
+
+        .photo-card:nth-child(2) {
+            top: 10%;
+            left: 25%;
+            transform: rotate(3deg);
+            z-index: 4;
+        }
+
+        .photo-card:nth-child(3) {
+            top: 5%;
+            left: 45%;
+            transform: rotate(-2deg);
+            z-index: 3;
+        }
+
+        .photo-card:nth-child(4) {
+            top: 15%;
+            left: 65%;
+            transform: rotate(4deg);
+            z-index: 2;
+        }
+
+        .photo-card:nth-child(5) {
+            top: 8%;
+            left: 75%;
+            transform: rotate(-3deg);
+            z-index: 1;
+        }
+
+        /* Decorative hearts */
+        .heart {
+            position: absolute;
+            color: rgba(255, 105, 180, 0.3);
+            z-index: 1;
+            animation: float 5s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .gallery {
+                height: 800px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .gallery {
+                height: 1400px;
+            }
+            
+            .photo-card {
+                width: 250px;
+                height: 375px;
+            }
+            
+            .photo-card:nth-child(1) {
+                top: 5%;
+                left: 50%;
+                transform: translateX(-50%) rotate(-5deg);
+            }
+            
+            .photo-card:nth-child(2) {
+                top: 25%;
+                left: 50%;
+                transform: translateX(-50%) rotate(3deg);
+            }
+            
+            .photo-card:nth-child(3) {
+                top: 45%;
+                left: 50%;
+                transform: translateX(-50%) rotate(-2deg);
+            }
+            
+            .photo-card:nth-child(4) {
+                top: 65%;
+                left: 50%;
+                transform: translateX(-50%) rotate(4deg);
+            }
+            
+            .photo-card:nth-child(5) {
+                top: 85%;
+                left: 50%;
+                transform: translateX(-50%) rotate(-3deg);
+            }
+        }
+
+        /* Hide welcome screen class */
+        .welcome-hidden {
+            transform: translateY(-100%);
+        }
+
+        /* Color theme classes */
+        .theme-peach {
+            background-color: #ffcdb2;
+        }
+        
+        .theme-blue {
+            background-color: #b5e2fa;
+        }
+        
+        .theme-purple {
+            background-color: #e0c3fc;
+        }
+        
+        .theme-green {
+            background-color: #c1e1c1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div class="welcome-screen theme-peach">
+        <div class="welcome-card">
+            <h1>Welcome to Syntax Squad</h1>
+            <p>Every moment with you is a treasure worth keeping.</p>
+            <div class="btn-container">
+                <button class="btn btn-colors" id="changeColors">Change Colors 🎨</button>
+                <button class="btn btn-enter" id="enterGallery">Enter Our Gallery✨</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stars Background -->
+    <div class="stars" id="stars"></div>
+    
+    <!-- Floating Hearts -->
+    <div class="heart" style="top: 20%; left: 10%; font-size: 24px;">❤️</div>
+    <div class="heart" style="top: 70%; left: 85%; font-size: 18px;">❤️</div>
+    <div class="heart" style="top: 40%; left: 90%; font-size: 20px;">❤️</div>
+    <div class="heart" style="top: 80%; left: 20%; font-size: 22px;">❤️</div>
+
+    <!-- Gallery -->
+    <div class="gallery-container">
+        <div class="gallery">
+            <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\photo9.jpg.jpeg" alt="Couple photo 1">
+            </div>
+            <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\photo8.jpg.jpeg" alt="Couple photo 2">
+            </div>
+            <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\photo7.jpg.jpeg" alt="Couple photo 3">
+            </div>
+            <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\image1.jpg.jpeg" alt="Couple photo 4">
+            </div>
+            <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\photo3.jpg.jpeg" alt="Couple photo 5">
+            </div>
+             <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\photo6.jpg.jpeg" alt="Couple photo 6">
+            </div>
+             <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\photo5.jpg.jpeg" alt="Couple photo 7">
+            </div>
+            <div class="photo-card">
+                <img src="C:\Users\vulig\Desktop\love gallery\images\photo4.jpg.jpeg" alt="Couple photo 8">
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Generate stars
+        const starsContainer = document.getElementById('stars');
+        const starCount = 100;
+        
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            
+            // Random size between 1-3px
+            const size = Math.random() * 2 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            
+            // Random position
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.left = `${Math.random() * 100}%`;
+            
+            // Random opacity for twinkling effect
+            star.style.opacity = Math.random();
+            
+            starsContainer.appendChild(star);
+        }
+        
+        // Animate stars for twinkling effect
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+            setInterval(() => {
+                star.style.opacity = Math.random();
+            }, Math.random() * 5000 + 2000);
+        });
+        
+        // Welcome screen functionality
+        const welcomeScreen = document.querySelector('.welcome-screen');
+        const enterButton = document.getElementById('enterGallery');
+        const colorButton = document.getElementById('changeColors');
+        
+        enterButton.addEventListener('click', () => {
+            welcomeScreen.classList.add('welcome-hidden');
+        });
+        
+        // Color themes
+        const themes = ['theme-peach', 'theme-blue', 'theme-purple', 'theme-green'];
+        let currentTheme = 0;
+        
+        colorButton.addEventListener('click', () => {
+            welcomeScreen.classList.remove(themes[currentTheme]);
+            currentTheme = (currentTheme + 1) % themes.length;
+            welcomeScreen.classList.add(themes[currentTheme]);
+        });
+        
+        // Add floating effect to photos
+        const photoCards = document.querySelectorAll('.photo-card');
+        
+        photoCards.forEach(card => {
+            // Random floating animation
+            const duration = Math.random() * 2 + 3; // 3-5 seconds
+            const xMovement = Math.random() * 10 - 5; // -5px to 5px
+            const yMovement = Math.random() * 10 - 5; // -5px to 5px
+            
+            card.style.animation = `float ${duration}s infinite alternate ease-in-out`;
+            
+            // Create custom keyframes for each card
+            document.styleSheets[0].insertRule(
+                `@keyframes float${photoCards.indexOf(card)} {
+                    0% { transform: translate(0, 0) rotate(${card.style.transform.replace('rotate(', '').replace(')', '')}); }
+                    100% { transform: translate(${xMovement}px, ${yMovement}px) rotate(${card.style.transform.replace('rotate(', '').replace(')', '')}); }
+                }`,
+                document.styleSheets[0].cssRules.length
+            );
+            
+            card.style.animation = `float${photoCards.indexOf(card)} ${duration}s infinite alternate ease-in-out`;
+        });
+    </script>
+</body>
+</html>
