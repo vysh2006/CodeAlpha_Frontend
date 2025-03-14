@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+        
+        .calculator {
+            background-color: #333;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            width: 320px;
+            overflow: hidden;
+        }
+        
+        .display {
+            background-color: #222;
+            color: white;
+            font-size: 2.5rem;
+            padding: 20px;
+            text-align: right;
+            height: 80px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .display .current-input {
+            font-size: 2.5rem;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .display .previous-input {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 1rem;
+            color: #aaa;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #444;
+            padding: 1px;
+        }
+        
+        button {
+            border: none;
+            outline: none;
+            background-color: #555;
+            color: white;
+            font-size: 1.5rem;
+            padding: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #666;
+        }
+        
+        button:active {
+            background-color: #777;
+        }
+        
+        .operator {
+            background-color: #fe9f06;
+        }
+        
+        .operator:hover {
+            background-color: #fea826;
+        }
+        
+        .operator:active {
+            background-color: #feb346;
+        }
+        
+        .clear, .delete {
+            background-color: #a5a5a5;
+            color: #333;
+        }
+        
+        .clear:hover, .delete:hover {
+            background-color: #b5b5b5;
+        }
+        
+        .clear:active, .delete:active {
+            background-color: #c5c5c5;
+        }
+        
+        .equals {
+            background-color: #fe9f06;
+        }
+        
+        .equals:hover {
+            background-color: #fea826;
+        }
+        
+        .equals:active {
+            background-color: #feb346;
+        }
+        
+        .span-2 {
+            grid-column: span 2;
+        }
+        
+        .calculator-history {
+            background-color: #444;
+            color: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        
+        .calculator-history.show {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #555;
+            font-size: 1rem;
+        }
+        
+        .history-toggle {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 5px;
+            cursor: pointer;
+        }
+        
+        .history-toggle:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="previous-input"></div>
+            <div class="current-input">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear">AC</button>
+            <button class="delete">DEL</button>
+            <button class="operator">%</button>
+            <button class="operator">÷</button>
+            <button class="number">7</button>
+            <button class="number">8</button>
+            <button class="number">9</button>
+            <button class="operator">×</button>
+            <button class="number">4</button>
+            <button class="number">5</button>
+            <button class="number">6</button>
+            <button class="operator">-</button>
+            <button class="number">1</button>
+            <button class="number">2</button>
+            <button class="number">3</button>
+            <button class="operator">+</button>
+            <button class="number span-2">0</button>
+            <button class="number">.</button>
+            <button class="equals">=</button>
+        </div>
+        <div class="history-toggle">History ▼</div>
+        <div class="calculator-history"></div>
+    </div>
+
+    <script>
+        class Calculator {
+            constructor() {
+                this.currentInput = '0';
+                this.previousInput = '';
+                this.operation = undefined;
+                this.shouldResetScreen = false;
+                this.history = [];
+                
+                // DOM Elements
+                this.currentInputDisplay = document.querySelector('.current-input');
+                this.previousInputDisplay = document.querySelector('.previous-input');
+                this.historyContainer = document.querySelector('.calculator-history');
+                
+                this.initEventListeners();
+            }
+            
+            initEventListeners() {
+                // Number buttons
+                document.querySelectorAll('.number').forEach(button => {
+                    button.addEventListener('click', () => this.appendNumber(button.textContent));
+                });
+                
+                // Operator buttons
+                document.querySelectorAll('.operator').forEach(button => {
+                    button.addEventListener('click', () => this.chooseOperation(button.textContent));
+                });
+                
+                // Equals button
+                document.querySelector('.equals').addEventListener('click', () => this.calculate());
+                
+                // Clear button
+                document.querySelector('.clear').addEventListener('click', () => this.clear());
+                
+                // Delete button
+                document.querySelector('.delete').addEventListener('click', () => this.delete());
+                
+                // History toggle
+                document.querySelector('.history-toggle').addEventListener('click', () => this.toggleHistory());
+                
+                // Keyboard support
+                window.addEventListener('keydown', (e) => this.handleKeyboardInput(e));
+            }
+            
+            appendNumber(number) {
+                if (this.shouldResetScreen) {
+                    this.currentInput = '';
+                    this.shouldResetScreen = false;
+                }
+                
+                // Handle decimal point
+                if (number === '.' && this.currentInput.includes('.')) return;
+                
+                // Replace 0 with the number unless it's a decimal point
+                if (this.currentInput === '0' && number !== '.') {
+                    this.currentInput = number;
+                } else {
+                    this.currentInput += number;
+                }
+                
+                this.updateDisplay();
+            }
+            
+            chooseOperation(operation) {
+                if (this.currentInput === '') return;
+                
+                if (this.previousInput !== '') {
+                    this.calculate();
+                }
+                
+                this.operation = operation;
+                this.previousInput = this.currentInput;
+                this.currentInput = '';
+                this.updateDisplay();
+            }
+            
+            calculate() {
+                let computation;
+                const prev = parseFloat(this.previousInput);
+                const current = parseFloat(this.currentInput);
+                
+                if (isNaN(prev) || isNaN(current)) return;
+                
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        computation = prev / current;
+                        break;
+                    case '%':
+                        computation = (prev * current) / 100;
+                        break;
+                    default:
+                        return;
+                }
+                
+                // Add to history
+                const historyItem = `${prev} ${this.operation} ${current} = ${computation}`;
+                this.addToHistory(historyItem);
+                
+                this.currentInput = computation.toString();
+                this.operation = undefined;
+                this.previousInput = '';
+                this.shouldResetScreen = true;
+                this.updateDisplay();
+            }
+            
+            clear() {
+                this.currentInput = '0';
+                this.previousInput = '';
+                this.operation = undefined;
+                this.updateDisplay();
+            }
+            
+            delete() {
+                if (this.currentInput === '0') return;
+                
+                this.currentInput = this.currentInput.slice(0, -1);
+                if (this.currentInput === '') {
+                    this.currentInput = '0';
+                }
+                
+                this.updateDisplay();
+            }
+            
+            updateDisplay() {
+                this.currentInputDisplay.textContent = this.formatNumber(this.currentInput);
+                
+                if (this.operation) {
+                    this.previousInputDisplay.textContent = `${this.formatNumber(this.previousInput)} ${this.operation}`;
+                } else {
+                    this.previousInputDisplay.textContent = '';
+                }
+            }
+            
+            formatNumber(number) {
+                const stringNumber = number.toString();
+                const integerDigits = parseFloat(stringNumber.split('.')[0]);
+                const decimalDigits = stringNumber.split('.')[1];
+                
+                let integerDisplay;
+                
+                if (isNaN(integerDigits)) {
+                    integerDisplay = '';
+                } else {
+                    integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 });
+                }
+                
+                if (decimalDigits != null) {
+                    return `${integerDisplay}.${decimalDigits}`;
+                } else {
+                    return integerDisplay;
+                }
+            }
+            
+            addToHistory(item) {
+                this.history.push(item);
+                if (this.history.length > 10) {
+                    this.history.shift(); // Keep only last 10 items
+                }
+                this.updateHistoryDisplay();
+            }
+            
+            updateHistoryDisplay() {
+                this.historyContainer.innerHTML = '';
+                
+                this.history.forEach(item => {
+                    const historyElement = document.createElement('div');
+                    historyElement.classList.add('history-item');
+                    historyElement.textContent = item;
+                    this.historyContainer.appendChild(historyElement);
+                });
+            }
+            
+            toggleHistory() {
+                this.historyContainer.classList.toggle('show');
+                const toggle = document.querySelector('.history-toggle');
+                
+                if (this.historyContainer.classList.contains('show')) {
+                    toggle.textContent = 'History ▲';
+                } else {
+                    toggle.textContent = 'History ▼';
+                }
+            }
+            
+            handleKeyboardInput(e) {
+                if (e.key >= '0' && e.key <= '9' || e.key === '.') {
+                    this.appendNumber(e.key);
+                }
+                
+                if (e.key === '+' || e.key === '-') {
+                    this.chooseOperation(e.key);
+                }
+                
+                if (e.key === '*') {
+                    this.chooseOperation('×');
+                }
+                
+                if (e.key === '/') {
+                    e.preventDefault();
+                    this.chooseOperation('÷');
+                }
+                
+                if (e.key === '%') {
+                    this.chooseOperation('%');
+                }
+                
+                if (e.key === 'Backspace') {
+                    this.delete();
+                }
+                
+                if (e.key === 'Escape') {
+                    this.clear();
+                }
+                
+                if (e.key === 'Enter' || e.key === '=') {
+                    this.calculate();
+                }
+            }
+        }
+        
+        // Initialize calculator
+        const calculator = new Calculator();
+    </script>
+</body>
+</html>
